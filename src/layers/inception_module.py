@@ -2,24 +2,17 @@ import torch
 import torch.nn as nn
 from layers.conv_layer import conv_1x1, conv_3x3, conv_5x5_fact
 
-
 class InceptionModule(nn.Module):
-    def __init__(self, in_channels, base_out_channels, coarsest_size=8, min_size=4):
+    def __init__(self, in_channels, base_out_channels, coarsest_size=8):
         super().__init__()
         self.in_channels = in_channels
         self.base_out_channels = base_out_channels
         self.coarsest_size = coarsest_size
-        self.min_size = min_size
 
     def _get_expanded_channels(self, x):
         _, _, h, w = x.shape
-        size = min(h, w)
-        if size >= self.coarsest_size:
-            factor = 1.0
-        elif size <= self.min_size:
-            factor = 2.0
-        else:
-            factor = 1.0 + (self.coarsest_size - size) / (self.coarsest_size - self.min_size)
+        # Eğer 8x8 ise 2x, diğer boyutlarda 1x
+        factor = 2.0 if min(h, w) == self.coarsest_size else 1.0
         return [int(c * factor) for c in self.base_out_channels]
 
     def forward(self, x):
