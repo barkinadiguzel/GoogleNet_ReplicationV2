@@ -1,13 +1,13 @@
 # 🌀 InceptionV2-Replication PyTorch Implementation
 
-This repository contains a replication of **InceptionV2**, based on the paper **“Rethinking the Inception Architecture for Computer Vision”**, using PyTorch. The model is designed for **efficient image classification**, using **channel expansion at the coarse 8×8 grid**, **factorized convolutions**, and **auxiliary classifiers**.
+This repository contains a replication of **InceptionV2**, based on the paper **“Rethinking the Inception Architecture for Computer Vision”**, using PyTorch. The model is designed for **efficient image classification**, using **channel expansion at coarse grids**, **factorized convolutions**, and **auxiliary classifiers**.
 
-- Implemented **InceptionV2** using modular Inception blocks (A, B, C, D, E) with **channel expansion at the coarse 8×8 grid** and **factorized large kernels**.
+- Implemented **InceptionV2** using modular Inception blocks (A, B, C, D, E) with **channel expansion at multiple coarse grids** and **factorized large kernels**.
 
 - Architecture:  
 **Stem → Inception3a-b → GridReduction → Inception4a-e + AuxClassifier → GridReduction → Inception5a-b → GlobalAvgPool → Flatten → FC**  
 
-> **Note on channel scaling:** In the original paper, channel expansion at coarse grids is static. In our implementation, we follow the same reference for the 8×8 grid (8×8 → 2×), and do not apply dynamic scaling to other grid sizes.
+> **Note on channel scaling:** In the original paper, channel expansion at coarse grids is static. In our implementation, channel expansion is applied at multiple coarse grids (e.g., 17×17 → 2×, 8×8 → 2×) to preserve feature richness while reducing computation.
 
 **Paper reference:** [Rethinking the Inception Architecture for Computer Vision](images/figmix.jpg)
 
@@ -23,7 +23,8 @@ This repository contains a replication of **InceptionV2**, based on the paper **
 **Figure 7:** Coarsest grid module with **expanded channels** for richer feature representation.  
 
 > **Model overview:**  
-> InceptionV2 increases channel depth on the coarse 8×8 grid to capture richer features while maintaining efficient parameter usage. Factorized convolutions reduce the number of parameters while preserving receptive fields. The auxiliary classifier acts as a regularizer, helping the network avoid overfitting and slightly improving final accuracy.
+> InceptionV2 increases channel depth on coarse grids to capture richer features while maintaining efficient parameter usage. Factorized convolutions reduce the number of parameters while preserving receptive fields. The auxiliary classifier acts as a regularizer, helping the network avoid overfitting and slightly improving final accuracy.
+
 
 ---
 
