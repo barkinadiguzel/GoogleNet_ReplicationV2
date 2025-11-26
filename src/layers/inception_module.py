@@ -1,29 +1,31 @@
-import torch
-import torch.nn as nn
-from layers.conv_layer import conv_1x1, conv_3x3, conv_asym, conv_5x5_fact
-
 class InceptionModule(nn.Module):
-    def __init__(self, in_channels, out_1x1, out_3x3, out_5x5, out_pool):
+    def __init__(self, in_channels, base_out_channels, coarsest_size=8, min_size=4):
         super().__init__()
-        # 1x1 branch
-        self.branch1 = conv_1x1(in_channels, out_1x1)
-        
-        # 3x3 branch (optionally factorized in v2)
-        self.branch2 = conv_3x3(in_channels, out_3x3)
+        self.in_channels = in_channels
+        self.base_out_channels = base_out_channels
+        self.coarsest_size = coarsest_size
+        self.min_size = min_size
 
-        # 5x5 branch (factorized as 3x3 + 3x3)
-        self.branch3 = conv_5x5_fact(in_channels, out_5x5)
-
-        # Pooling branch
-        self.branch4 = nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-            conv_1x1(in_channels, out_pool)
-        )
+    def _get_expanded_channels(self, x):
+        _, _, h, w = x.shape
+        size = min(h, w)
+        if size >= self.coarsest_size:
+            factor = 1.0
+        elif size <= self.min_size:
+            factor = 2.0
+        else:
+            factor = 1.0 + (self.coarsest_size - size) / (self.coarsest_size - self.min_size)
+        return [int(c * factor) for c in self.base_out_channels]
 
     def forward(self, x):
-        return torch.cat([
-            self.branch1(x),
-            self.branch2(x),
-            self.branch3(x),
-            self.branch4(x)
-        ], dim=1)
+        out_channels = self._get_expanded_channels(x)
+        
+        branch1 = conv_1x1(self.in_channels, out_channels[0])(x)
+        branch2 = conv_3x3(self.in_channels, out_channels[1])(x)
+        branch3 = conv_5x5_fact(self.in_channels, out_channels[2])(x)
+        branch4 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+            conv_1x1(self.in_channels, out_channels[3])
+        )(x)
+
+        return torch.cat([branch1, branch2, branch3, branch4], dim=1)
