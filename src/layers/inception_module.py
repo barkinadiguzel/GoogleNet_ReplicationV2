@@ -1,3 +1,8 @@
+import torch
+import torch.nn as nn
+from layers.conv_layer import conv_1x1, conv_3x3, conv_5x5_fact
+
+
 class InceptionModule(nn.Module):
     def __init__(self, in_channels, base_out_channels, coarsest_size=8, min_size=4):
         super().__init__()
