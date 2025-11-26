@@ -9,21 +9,24 @@ class InceptionModule(nn.Module):
         self.base_out_channels = base_out_channels
         self.coarsest_size = coarsest_size
 
-    def _get_expanded_channels(self, x):
-        _, _, h, w = x.shape
-        # Eğer 8x8 ise 2x, diğer boyutlarda 1x
-        factor = 2.0 if min(h, w) == self.coarsest_size else 1.0
-        return [int(c * factor) for c in self.base_out_channels]
-
     def forward(self, x):
-        out_channels = self._get_expanded_channels(x)
-        
-        branch1 = conv_1x1(self.in_channels, out_channels[0])(x)
-        branch2 = conv_3x3(self.in_channels, out_channels[1])(x)
-        branch3 = conv_5x5_fact(self.in_channels, out_channels[2])(x)
+        _, _, h, w = x.shape
+
+        if min(h, w) == self.coarsest_size:
+            # P branch: pooling
+            branch_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)(x)
+            # C branch: conv stride 2
+            branch_conv = conv_1x1(self.in_channels, self.base_out_channels[0], stride=2)(x)
+            # concat
+            x = torch.cat([branch_pool, branch_conv], dim=1)
+            return x
+            
+        branch1 = conv_1x1(self.in_channels, self.base_out_channels[0])(x)
+        branch2 = conv_3x3(self.in_channels, self.base_out_channels[1])(x)
+        branch3 = conv_5x5_fact(self.in_channels, self.base_out_channels[2])(x)
         branch4 = nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-            conv_1x1(self.in_channels, out_channels[3])
+            conv_1x1(self.in_channels, self.base_out_channels[3])
         )(x)
 
         return torch.cat([branch1, branch2, branch3, branch4], dim=1)
