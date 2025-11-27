@@ -9,7 +9,7 @@ This repository contains a replication of **InceptionV2**, based on the paper **
 
 > **Note on channel scaling:** In the original paper, channel expansion at coarse grids is static. In our implementation, channel expansion is applied at multiple coarse grids (e.g., 17×17 → 2×, 8×8 → 2×) to preserve feature richness while reducing computation.
 
-**Paper reference:** [Rethinking the Inception Architecture for Computer Vision](images/figmix.jpg)
+**Paper reference:** [Rethinking the Inception Architecture for Computer Vision](https://arxiv.org/abs/1512.00567) 
 
 
 ---
